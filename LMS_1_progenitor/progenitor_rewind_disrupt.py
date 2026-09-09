@@ -40,7 +40,16 @@ The two scenarios share everything except dynamical friction:
   * "No DF"    : Yuan/Malhan-like, no friction anywhere.
 
 Outputs
--
+
+All files of a run are written to the pair of scenario folders
+
+    mass_<M_200>_df/      e.g. mass_1e10_df/
+    mass_<M_200>_nodf/    e.g. mass_1e10_nodf/
+
+so that runs at different LMS-1 subhalo masses never overwrite each other.
+Snapshot arrays go to the folder of their own scenario; the combined
+(DF | no-DF) figures, animations and summary are written to both.
+
   lms1gc_{xy,xz,yz}.png   2 rows (DF / no-DF) x 5 epochs: stream + GC tracks
   lms1gc_{xy,xz,yz}.mp4   side-by-side animations (DF left . no-DF right)
   lms1gc_core_retention.png   headline: GC distance from LMS-1 core vs time,
@@ -53,6 +62,7 @@ Outputs
 """
 
 import os
+import shutil
 import numpy as np
 import scipy.special
 import matplotlib
@@ -105,6 +115,41 @@ def nfw_params_from_M200(M_200, z=Z_HALO):
 # the core (co-retention test) rather than only the massive one.
 M_HALO = 1.0e10
 C_NFW, R200, RS_NFW, M_NFW_CHAR = nfw_params_from_M200(M_HALO, z=Z_HALO)
+
+
+# Output folders: one per (subhalo mass, DF setting), e.g. mass_1e10_df/
+def _mass_tag(m):
+    """1e10 -> '1e10', 3.2e9 -> '3p2e9' (filesystem-safe mantissa)."""
+    e = int(np.floor(np.log10(m) + 1e-9))
+    c = m / 10.0**e
+    c_s = (f"{int(round(c))}" if abs(c - round(c)) < 1e-6
+           else f"{c:.2f}".rstrip("0").rstrip(".").replace(".", "p"))
+    return f"{c_s}e{e}"
+
+
+OUT_ROOT = os.path.dirname(os.path.abspath(__file__))
+MASS_TAG = _mass_tag(M_HALO)
+OUT_DIRS = {tag: os.path.join(OUT_ROOT, f"mass_{MASS_TAG}_{tag}")
+            for tag in ("df", "nodf")}
+for _d in OUT_DIRS.values():
+    os.makedirs(_d, exist_ok=True)
+
+
+def out_path(fname, tag):
+    """Path of an output file in the 'df' or 'nodf' folder of this mass."""
+    return os.path.join(OUT_DIRS[tag], fname)
+
+
+def save_fig_both(fig, fname, **kw):
+    """Combined DF/no-DF figure -> written into BOTH scenario folders."""
+    p = out_path(fname, "df")
+    fig.savefig(p, **kw)
+    shutil.copy2(p, out_path(fname, "nodf"))
+    return p
+
+
+def _both_msg(fname):
+    return f"{fname}  ->  mass_{MASS_TAG}_{{df,nodf}}/"
 
 # LMS-1 stellar body (stream particles)
 N_STREAM     = 10_000     # test particles (massless in integration)
@@ -193,10 +238,11 @@ for g in GCS:
     print(f"  GC        : {g['name']:9s}  M = {g['mass']:.2e} Msun"
           f"  r0 = {g['r0']:.2f} kpc inside halo")
 print(f"  Timestep  : tau = {TAU*1e3:.4f} Myr  T = {T_BACKWARD:.1f} Gyr")
+print(f"  Output    : mass_{MASS_TAG}_df/  and  mass_{MASS_TAG}_nodf/")
 print("=" * 70)
 
 # Potentials
-pot_host  = agama.Potential("../MWPotential2014.ini")
+pot_host  = agama.Potential("MWPotential2014.ini")
 pot_nfw   = agama.Potential(type="NFW", mass=M_NFW_CHAR, scaleRadius=RS_NFW)
 pot_stars = agama.Potential(type="Plummer", mass=M_STARS_LMS1, scaleRadius=B_LMS1)
 pot_lms1  = agama.Potential(pot_stars, pot_nfw)         # internal LMS-1 potential
@@ -678,9 +724,10 @@ for proj in PROJECTIONS:
         f"Top: WITH dynamical friction  .  Bottom: NO friction (Yuan+/Malhan+ like)",
         fontsize=11, y=1.02)
     plt.tight_layout()
-    plt.savefig(fname, bbox_inches="tight", dpi=150, facecolor=fig.get_facecolor())
+    save_fig_both(fig, fname, bbox_inches="tight", dpi=150,
+                  facecolor=fig.get_facecolor())
     plt.close(fig)
-    print(f"  saved: {fname}")
+    print(f"  saved: {_both_msg(fname)}")
 
 
 
@@ -711,10 +758,10 @@ fig.suptitle(
     f"stream bound fraction at t=0:  DF = {bfrac['DF']:.2f}   no-DF = {bfrac['noDF']:.2f}",
     fontsize=12, y=1.02)
 plt.tight_layout()
-plt.savefig("lms1gc_core_distance.png", bbox_inches="tight", dpi=140,
-            facecolor=fig.get_facecolor())
+save_fig_both(fig, "lms1gc_core_distance.png", bbox_inches="tight", dpi=140,
+              facecolor=fig.get_facecolor())
 plt.close(fig)
-print("  saved: lms1gc_core_distance.png")
+print(f"  saved: {_both_msg('lms1gc_core_distance.png')}")
 
 
 # GC galactocentric radius (absolute orbit)
@@ -737,10 +784,10 @@ for i, g in enumerate(GCS):
 ax.legend(fontsize=8, loc="best", ncol=2)
 
 plt.tight_layout()
-plt.savefig("lms1gc_core_retention.png", bbox_inches="tight", dpi=140,
-            facecolor=fig.get_facecolor())
+save_fig_both(fig, "lms1gc_core_retention.png", bbox_inches="tight", dpi=140,
+              facecolor=fig.get_facecolor())
 plt.close(fig)
-print("  saved: lms1gc_core_retention.png")
+print(f"  saved: {_both_msg('lms1gc_core_retention.png')}")
 
 
 
@@ -761,10 +808,10 @@ ax.axhline(_obs_sep, color="0.4", ls=":", lw=1.2,
            label=f"observed today ({_obs_sep:.2f} kpc)")
 ax.legend(fontsize=10)
 plt.tight_layout()
-plt.savefig("lms1gc_gc_separation.png", bbox_inches="tight", dpi=140,
-            facecolor=fig.get_facecolor())
+save_fig_both(fig, "lms1gc_gc_separation.png", bbox_inches="tight", dpi=140,
+              facecolor=fig.get_facecolor())
 plt.close(fig)
-print("  saved: lms1gc_gc_separation.png")
+print(f"  saved: {_both_msg('lms1gc_gc_separation.png')}")
 
 
 
@@ -786,7 +833,7 @@ def gc_to_radec(xyz_kpc):
 # observed LMS-1 stream (STREAMFINDER / Ibata+2024)
 import pandas as pd
 _obs_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        "..", "data", "cleaned_streamfinder_ibata24.csv")
+                        "cleaned_streamfinder_ibata24.csv")
 _obs = pd.read_csv(_obs_csv)
 _obs = _obs[_obs["Name"] == "LMS-1"]
 OBS_RA, OBS_DEC = _obs["RAdeg"].values, _obs["DEdeg"].values
@@ -869,10 +916,10 @@ for ax, res, c_st, xva, ta, lbl in sky_cfg:
 fig.suptitle("LMS-1 stream + embedded GCs vs STREAMFINDER — RA/Dec (ICRS)  |  t = 0",
              fontsize=12, y=1.02)
 plt.tight_layout()
-plt.savefig("lms1gc_radec.png", bbox_inches="tight", dpi=140,
-            facecolor=fig.get_facecolor())
+save_fig_both(fig, "lms1gc_radec.png", bbox_inches="tight", dpi=140,
+              facecolor=fig.get_facecolor())
 plt.close(fig)
-print("  saved: lms1gc_radec.png")
+print(f"  saved: {_both_msg('lms1gc_radec.png')}")
 
 
 
@@ -923,10 +970,10 @@ for gi, g in enumerate(GCS):
 ax.legend(fontsize=8, markerscale=3)
 fig.suptitle("LMS-1 stream + GCs — integrals of motion at t = 0", fontsize=12, y=1.01)
 plt.tight_layout()
-plt.savefig("lms1gc_energy_L.png", bbox_inches="tight", dpi=140,
-            facecolor=fig.get_facecolor())
+save_fig_both(fig, "lms1gc_energy_L.png", bbox_inches="tight", dpi=140,
+              facecolor=fig.get_facecolor())
 plt.close(fig)
-print("  saved: lms1gc_energy_L.png")
+print(f"  saved: {_both_msg('lms1gc_energy_L.png')}")
 
 
 
@@ -937,7 +984,6 @@ FPS = 30
 
 # Locate ffmpeg (HPC module installs it outside the default PATH); fall back to
 # an animated GIF (Pillow, no ffmpeg needed) if no ffmpeg binary is found.
-import shutil
 _FFMPEG = shutil.which("ffmpeg")
 if _FFMPEG is None:
     for _cand in ("/cluster/software/ffmpeg/6.1/bin/ffmpeg",):
@@ -961,10 +1007,12 @@ def save_anim(fig, upd, filename, n_frames):
     else:
         writer = animation.PillowWriter(fps=FPS)
         out = filename.rsplit(".", 1)[0] + ".gif"
-    anim.save(out, writer=writer, dpi=140,
+    p = out_path(out, "df")
+    anim.save(p, writer=writer, dpi=140,
               savefig_kwargs={"facecolor": fig.get_facecolor()})
+    shutil.copy2(p, out_path(out, "nodf"))
     plt.close(fig)
-    print(f"  saved: {out}")
+    print(f"  saved: {_both_msg(out)}")
 
 
 for proj in PROJECTIONS:
@@ -1028,18 +1076,22 @@ print("\nSaving snapshot arrays ...")
 for tag, res in [("df", res_DF), ("nodf", res_noDF)]:
     for ep_i, t_ep in enumerate(T_SNAPS):
         xyz_s, xyz_g, _ = res["gyr_snaps"][ep_i]
-        np.save(f"snap_stream_{tag}_t{int(round(t_ep)):+d}gyr.npy", xyz_s)
-        np.save(f"snap_gc_{tag}_t{int(round(t_ep)):+d}gyr.npy", xyz_g)
-    np.save(f"snap_stream_{tag}_final.npy", res["xv_stream_final"])
-    np.save(f"snap_gc_{tag}_final.npy", res["xv_gc_final"])
-print("  saved snap_stream_* and snap_gc_* arrays")
+        np.save(out_path(f"snap_stream_{tag}_t{int(round(t_ep)):+d}gyr.npy", tag),
+                xyz_s)
+        np.save(out_path(f"snap_gc_{tag}_t{int(round(t_ep)):+d}gyr.npy", tag),
+                xyz_g)
+    np.save(out_path(f"snap_stream_{tag}_final.npy", tag), res["xv_stream_final"])
+    np.save(out_path(f"snap_gc_{tag}_final.npy", tag), res["xv_gc_final"])
+    print(f"  saved snap_stream_{tag}_* and snap_gc_{tag}_* in "
+          f"mass_{MASS_TAG}_{tag}/")
 
-with open("results_summary.txt", "w") as f:
-    f.write("LMS-1 progenitor rewind + disruption with two embedded GCs\n")
-    f.write("Dynamical friction added (absent in Yuan+2020 / Malhan+2021)\n")
-    f.write("=" * 60 + "\n\n")
-    for line in verdict_lines:
-        f.write(line + "\n")
-print("  saved: results_summary.txt")
+_summary = ["LMS-1 progenitor rewind + disruption with two embedded GCs",
+            "Dynamical friction added (absent in Yuan+2020 / Malhan+2021)",
+            f"LMS-1 subhalo mass M_200 = {M_HALO:.2e} Msun  (tag {MASS_TAG})",
+            "=" * 60, ""] + verdict_lines
+for _tag in ("df", "nodf"):
+    with open(out_path("results_summary.txt", _tag), "w") as f:
+        f.write("\n".join(_summary) + "\n")
+print(f"  saved: {_both_msg('results_summary.txt')}")
 
 print("\nAll done.")

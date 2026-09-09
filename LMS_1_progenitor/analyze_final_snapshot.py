@@ -34,6 +34,7 @@ Outputs
 """
 
 import os
+import shutil
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -64,6 +65,43 @@ T_BACKWARD = float(_re.search(r"^T_BACKWARD = ([0-9.]+)", _mainsrc, _re.M).group
 Z_HALO, LITTLE_H = 1.0, 0.70
 print(f"  analyze using M_HALO = {M_HALO:.3e} Msun, T_BACKWARD = {T_BACKWARD} Gyr"
       "  (from run script)")
+
+
+# --- per-(mass, DF) result folders, matching progenitor_rewind_disrupt.py -----
+def _mass_tag(m):
+    """1e10 -> '1e10', 3.2e9 -> '3p2e9' (filesystem-safe mantissa)."""
+    e = int(np.floor(np.log10(m) + 1e-9))
+    c = m / 10.0**e
+    c_s = (f"{int(round(c))}" if abs(c - round(c)) < 1e-6
+           else f"{c:.2f}".rstrip("0").rstrip(".").replace(".", "p"))
+    return f"{c_s}e{e}"
+
+
+MASS_TAG = _mass_tag(M_HALO)
+OUT_DIRS = {tag: os.path.join(HERE, f"mass_{MASS_TAG}_{tag}")
+            for tag in ("df", "nodf")}
+for _d in OUT_DIRS.values():
+    os.makedirs(_d, exist_ok=True)
+print(f"  result folders: mass_{MASS_TAG}_df/  and  mass_{MASS_TAG}_nodf/")
+
+
+def out_path(fname, tag):
+    """Path of an output file in the 'df' or 'nodf' folder of this mass."""
+    return os.path.join(OUT_DIRS[tag], fname)
+
+
+def in_path(fname, tag):
+    """Snapshot input path; falls back to HERE for pre-folder runs."""
+    p = out_path(fname, tag)
+    return p if os.path.exists(p) else os.path.join(HERE, fname)
+
+
+def save_fig_both(fig, fname, **kw):
+    """Combined DF/no-DF figure -> written into BOTH scenario folders."""
+    p = out_path(fname, "df")
+    fig.savefig(p, **kw)
+    shutil.copy2(p, out_path(fname, "nodf"))
+    return f"{fname}  ->  mass_{MASS_TAG}_{{df,nodf}}/"
 _E2 = 0.30*(1+Z_HALO)**3 + 0.70
 _rhoc = 277.5*LITTLE_H**2 * _E2
 _a = 0.520 + (0.905-0.520)*np.exp(-0.617*Z_HALO**1.21)
@@ -200,8 +238,8 @@ print("-" * 70)
 
 models = {}
 for tag in ("df", "nodf"):
-    xv_s = np.load(os.path.join(HERE, f"snap_stream_{tag}_final.npy"))
-    xv_g = np.load(os.path.join(HERE, f"snap_gc_{tag}_final.npy"))
+    xv_s = np.load(in_path(f"snap_stream_{tag}_final.npy", tag))
+    xv_g = np.load(in_path(f"snap_gc_{tag}_final.npy", tag))
     models[tag] = dict(stream=galcen6d_to_obs(xv_s), gc=galcen6d_to_obs(xv_g))
     print(f"  loaded snap_stream_{tag}_final.npy : {xv_s.shape[0]} particles")
 
@@ -331,8 +369,8 @@ fig.suptitle("LMS-1 stream model vs STREAMFINDER (Ibata+2024) — RA/Dec (ICRS) 
              fontsize=12, y=1.04)
 plt.tight_layout()
 # this is the definitive RA/Dec figure (overwrites the main script's)
-out = os.path.join(HERE, "lms1gc_radec.png")
-plt.savefig(out, bbox_inches="tight", dpi=140, facecolor=fig.get_facecolor())
+out = save_fig_both(fig, "lms1gc_radec.png", bbox_inches="tight", dpi=140,
+                    facecolor=fig.get_facecolor())
 plt.close(fig)
 print(f"  saved: {out}")
 
@@ -364,8 +402,8 @@ fig.legend(h, lab, fontsize=9, loc="center left", bbox_to_anchor=(0.83, 0.5),
 fig.suptitle("LMS-1 proper motion: N-body debris in observed footprint vs STREAMFINDER",
              fontsize=12, y=0.99)
 plt.tight_layout(rect=[0, 0, 0.82, 1])
-out = os.path.join(HERE, "lms1gc_pm_compare.png")
-plt.savefig(out, bbox_inches="tight", dpi=140, facecolor=fig.get_facecolor())
+out = save_fig_both(fig, "lms1gc_pm_compare.png", bbox_inches="tight", dpi=140,
+                    facecolor=fig.get_facecolor())
 plt.close(fig)
 print(f"  saved: {out}")
 
@@ -393,8 +431,8 @@ ax.legend(fontsize=9, loc="center left", bbox_to_anchor=(1.01, 0.5),
 fig.suptitle("LMS-1 line-of-sight velocity: N-body debris in footprint vs STREAMFINDER",
              fontsize=12, y=0.99)
 plt.tight_layout(rect=[0, 0, 0.78, 1])
-out = os.path.join(HERE, "lms1gc_vlos_compare.png")
-plt.savefig(out, bbox_inches="tight", dpi=140, facecolor=fig.get_facecolor())
+out = save_fig_both(fig, "lms1gc_vlos_compare.png", bbox_inches="tight", dpi=140,
+                    facecolor=fig.get_facecolor())
 plt.close(fig)
 print(f"  saved: {out}")
 
@@ -441,8 +479,8 @@ for tag in ("df", "nodf"):
 
 txt = "\n".join(lines)
 print("\n" + txt)
-out = os.path.join(HERE, "obs_comparison_summary.txt")
-with open(out, "w") as f:
-    f.write(txt + "\n")
-print(f"\n  saved: {out}")
+for _tag in ("df", "nodf"):
+    with open(out_path("obs_comparison_summary.txt", _tag), "w") as f:
+        f.write(txt + "\n")
+print(f"\n  saved: obs_comparison_summary.txt  ->  mass_{MASS_TAG}_{{df,nodf}}/")
 print("\nAll done.")
