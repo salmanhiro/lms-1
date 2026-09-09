@@ -1,0 +1,214 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+
+\newcommand{\Msun}{M_\odot}
+\newcommand{\kpc}{\,\mathrm{kpc}}
+\newcommand{\kms}{\,\mathrm{km\,s^{-1}}}
+\newcommand{\Gyr}{\,\mathrm{Gyr}}
+
+\title{Tidal disruption of the LMS-1/Wukong progenitor with two embedded
+globular clusters and dynamical friction: methods and orbit--anchor diagnostics}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Aim}
+Yuan et al.~(2020) and Malhan et al.~(2021) associate the globular clusters
+NGC\,5024 (M53) and NGC\,5053 with the LMS-1/Wukong accretion event, but their
+orbital models contain \emph{no dynamical friction}. We rewind a progenitor
+dwarf in the Milky Way (MW) potential, plant the two clusters inside it, and
+integrate forward to the present with and without Chandrasekhar friction. We
+then confront the resulting stellar debris with the observed LMS-1 stream from
+the \textsc{StreamFinder} catalogue (Ibata et al.~2024), and we test how the
+result depends on the progenitor halo mass, the disruption time, and crucially
+the choice of orbit on which the debris is launched.
+
+\section{Galactic frame and host potential}
+All dynamics are integrated in the Milky Way potential of Bovy~(2015,
+\texttt{MWPotential2014}), $\Phi_{\rm MW}(\mathbf{x})$. Observed equatorial
+phase space is mapped to the Galactocentric frame with
+$R_0=8\kpc$, $z_\odot=25\,\mathrm{pc}$, and solar velocity
+$\mathbf{v}_\odot=(11.1,\,232.24,\,7.25)\kms$, and back, using the standard
+ICRS$\leftrightarrow$Galactocentric transformation. We denote a 6D state
+$\mathbf{w}=(\mathbf{x},\mathbf{v})$.
+
+\section{LMS-1 progenitor dark halo}
+The progenitor is an NFW halo whose structural parameters follow the
+Dutton \& Macci\`o~(2014) concentration--mass relation at formation redshift
+$z_{\rm h}=1$. For a virial mass $M_{200}$,
+\begin{align}
+\log_{10} c_{200} &= a + b\,\log_{10}\!\left(\frac{M_{200}\,h}{10^{12}\,\Msun}\right),\\
+a &= 0.520 + (0.905-0.520)\,e^{-0.617\,z^{1.21}}, \qquad b = -0.101 + 0.026\,z,\\
+\rho_{\rm crit}(z) &= \rho_{\rm crit,0}\,E^2(z), \qquad
+E^2(z)=\Omega_m(1+z)^3+\Omega_\Lambda,\\
+r_{200} &= \left(\frac{3 M_{200}}{4\pi\,200\,\rho_{\rm crit}(z)}\right)^{1/3},
+\qquad r_s = \frac{r_{200}}{c_{200}},\\
+M_{\rm c} &= \frac{M_{200}}{\ln(1+c_{200}) - c_{200}/(1+c_{200})},
+\end{align}
+with $h=0.70$, $\Omega_m=0.30$, $\Omega_\Lambda=0.70$. The NFW density and
+potential are
+\begin{equation}
+\rho_{\rm NFW}(r)=\frac{M_{\rm c}}{4\pi r_s^3}\frac{1}{(r/r_s)(1+r/r_s)^2},
+\qquad
+\Phi_{\rm NFW}(r)=-\frac{G M_{\rm c}}{r}\ln\!\left(1+\frac{r}{r_s}\right).
+\end{equation}
+The stellar body and each cluster are softened Plummer spheres,
+\begin{equation}
+\Phi_{\rm P}(r)=-\frac{G M}{\sqrt{r^2+b^2}},
+\end{equation}
+with scale $b_{\rm LMS1}=2\kpc$ for the stars and $b_{\rm GC}=10\,\mathrm{pc}$
+for the clusters. The internal circular speed and 1D velocity dispersion of the
+dwarf are
+\begin{equation}
+v_{\rm circ}(r)=\sqrt{r\left|\partial_r\Phi_{\rm LMS1}\right|},
+\qquad
+\sigma(r)=\max\!\left(\frac{v_{\rm circ}(r)}{\sqrt2},\,\sigma_{\rm floor}\right),
+\end{equation}
+where $\Phi_{\rm LMS1}=\Phi_{\rm NFW}+\Phi_{\rm P,\,stars}$.
+
+\section{Chandrasekhar dynamical friction}
+A body of mass $M_{\rm sat}$ moving with velocity $\mathbf{v}_{\rm rel}$
+relative to a background of density $\rho$ and dispersion $\sigma$ feels the drag
+\begin{equation}
+\mathbf{a}_{\rm DF}
+= -\,\frac{4\pi G^2 M_{\rm sat}\,\ln\Lambda\,\rho}{v_{\rm rel}^3}
+\left[\operatorname{erf}(X)-\frac{2X}{\sqrt\pi}\,e^{-X^2}\right]\mathbf{v}_{\rm rel},
+\qquad
+X=\frac{v_{\rm rel}}{\sqrt2\,\sigma}.
+\label{eq:chandra}
+\end{equation}
+Equation~\eqref{eq:chandra} is applied in two places:
+\begin{itemize}
+\item \emph{halo--MW friction} on the dwarf's orbit, with $\rho=\rho_{\rm MW}$,
+$\sigma=\sqrt{\max(-\Phi_{\rm MW}/2,\,\sigma_{\min}^2)}$, $M_{\rm sat}=M_{200}$,
+$\ln\Lambda=4.6$;
+\item \emph{cluster--halo friction}, with $\rho=\rho_{\rm NFW}$,
+$\sigma=\sigma(r)$, $M_{\rm sat}=M_{\rm GC}$,
+$\ln\Lambda=\max[2,\ln(M_{200}/M_{\rm GC})]$.
+\end{itemize}
+The ``no-DF'' runs set $\mathbf{a}_{\rm DF}\equiv 0$ everywhere, reproducing the
+Yuan/Malhan assumption.
+
+\section{Time integration}
+All trajectories use a kick--drift--kick (KDK) leapfrog with fixed step
+$\tau=2^{-11}\Gyr\approx0.49\,\mathrm{Myr}$:
+\begin{align}
+\mathbf{v}_{n+1/2}&=\mathbf{v}_n+\tfrac{\tau}{2}\,\mathbf{a}(\mathbf{x}_n,\mathbf{v}_n),\nonumber\\
+\mathbf{x}_{n+1}&=\mathbf{x}_n+\tau\,\mathbf{v}_{n+1/2},\\
+\mathbf{v}_{n+1}&=\mathbf{v}_{n+1/2}+\tfrac{\tau}{2}\,\mathbf{a}(\mathbf{x}_{n+1},\mathbf{v}_{n+1/2}).\nonumber
+\end{align}
+Backward integration (``rewind'') uses $\tau\to-\tau$.
+
+\subsection{Equations of motion}
+The moving halo centre, the (massless) stream tracers, and the live clusters obey
+\begin{align}
+\mathbf{a}_{\rm centre} &= -\nabla\Phi_{\rm MW}(\mathbf{x}_c)
+   + \mathbf{a}_{\rm DF}^{\rm halo},\\
+\mathbf{a}_{\rm star} &= -\nabla\Phi_{\rm MW}(\mathbf{x})
+   - \nabla\Phi_{\rm NFW}(\mathbf{x}-\mathbf{x}_c)
+   - \sum_{i}\nabla\Phi_{{\rm GC},i}(\mathbf{x}-\mathbf{x}_{{\rm GC},i}),\\
+\mathbf{a}_{{\rm GC},i} &= -\nabla\Phi_{\rm MW}(\mathbf{x}_i)
+   - \nabla\Phi_{\rm NFW}(\mathbf{x}_i-\mathbf{x}_c)
+   - \sum_{j\neq i}\nabla\Phi_{{\rm GC},j}(\mathbf{x}_i-\mathbf{x}_j)
+   + \mathbf{a}_{{\rm DF},i}^{\rm halo},
+\end{align}
+where $\mathbf{x}_c(t)$ is the rewound halo trajectory (below) and the stream
+tracers are massless.
+
+\section{Progenitor orbit by rewinding the clusters}
+The present-day LMS-1 centroid is the \emph{mass-weighted} mean of the two
+clusters' measured phase space,
+\begin{equation}
+\mathbf{w}_{\rm LMS1}(0)=\frac{M_{5024}\,\mathbf{w}_{5024}+M_{5053}\,\mathbf{w}_{5053}}
+{M_{5024}+M_{5053}}.
+\end{equation}
+Mass-weighting is required: a plain average cancels the clusters' opposite
+$v_{\rm los}$/$v_z$ and yields an unphysically circular orbit. This state is
+rewound for $T$ in $\Phi_{\rm MW}$ ($+\,\mathbf{a}_{\rm DF}^{\rm halo}$ for the DF
+run) to give $\mathbf{x}_c(t)$, $t\in[-T,0]$, the moving NFW centre.
+
+\section{Cluster initial conditions (corrected)}
+\label{sec:gcic}
+Rather than planting the clusters at arbitrary internal offsets, we set their
+$t=-T$ states by rewinding their \emph{observed} present-day phase space
+$\mathbf{w}_{{\rm GC},i}(0)$ through the full force field (MW $+$ moving NFW $+$
+mutual gravity $[+\,$DF$]$). Forward integration then returns each cluster to its
+observed position: exactly for the reversible no-DF case, and to
+$\lesssim0.1^\circ$ for the (velocity-dependent, weakly irreversible) DF case.
+A by-product is that, on its measured orbit, NGC\,5053 lies $\sim89\kpc$
+from the LMS-1 centre at $t=-5\Gyr$ (versus $\sim3\kpc$ for NGC\,5024), i.e.\ it
+is not tightly co-orbiting the core.
+
+\section{Stellar stream sampling}
+$N=10^4$ massless tracers are drawn from a quasi-spherical distribution function
+$f(\mathbf{x},\mathbf{v})$ self-consistent with the Plummer stellar density
+inside $\Phi_{\rm LMS1}$, then rigidly translated to the rewound centre
+$\mathbf{x}_c(-T)$ and integrated forward, feeling MW $+$ moving NFW $+$ both
+clusters.
+
+\section{Tidal (Jacobi) radius}
+The instantaneous tidal radius of the dwarf at galactocentric distance $R$ is
+solved self-consistently from the enclosed masses,
+\begin{equation}
+r_{\rm t}=R\left[\frac{M_{\rm NFW}(<r_{\rm t})}{3\,M_{\rm MW}(<R)}\right]^{1/3},
+\qquad
+M_{\rm NFW}(<r)=M_{\rm c}\!\left[\ln\!\Big(1+\tfrac{r}{r_s}\Big)-\frac{r/r_s}{1+r/r_s}\right],
+\end{equation}
+with $M_{\rm MW}(<R)=v_c^2(R)\,R/G=|a_R|\,R^2/G$.
+
+\section{Observable comparison}
+Final 6D debris is transformed to
+$(\alpha,\delta,d,\mu_{\alpha\ast},\mu_\delta,v_{\rm los})$. We select catalogue
+LMS-1 members, build the convex hull of their $(\alpha,\delta)$ (dilated $15\%$)
+as a footprint $\mathcal{F}$, and compare only model particles inside
+$\mathcal{F}$. Coverage is the fraction of observed stars with $\geq5$ model
+neighbours within $3^\circ$; kinematic agreement uses the median offsets and the
+local RMS residuals in $\mu$ and $v_{\rm los}$.
+
+To test whether the debris is launched on the right orbit, we measure the
+great-circle distance of each observed star to the projected progenitor orbit
+$\{\alpha(t),\delta(t)\}$,
+\begin{equation}
+\theta_k=\min_t \arccos\big(\hat{\mathbf{n}}_k\cdot\hat{\mathbf{n}}_{\rm orb}(t)\big),
+\end{equation}
+together with the angle between the on-sky stream direction and the local orbit
+tangent.
+
+\section{Stream-fit (Malhan) orbit}
+For the literature comparison we also build an IC that matches the
+Malhan et al.~(2021) orbit ($r_{\rm peri}\!\approx\!10$,
+$r_{\rm apo}\!\approx\!16\kpc$, $e\!\approx\!0.2$,
+$L_z\!\approx\!-700\kpc\kms$, inclination $\sim75^\circ$). Anchoring at
+apocenter along the observed stream centroid, we solve for the tangential speed
+and orientation that reproduce $(r_{\rm peri},r_{\rm apo},L_z)$, verifying by
+direct integration.
+
+\section{Experiments and key results}
+\begin{itemize}
+\item \textbf{DF vs.\ no-DF.} With DF both clusters sink to and are retained in
+the core; the rewound centre orbits differ from the no-DF case by up to
+$\sim86\kpc$ at $-5\Gyr$ (but negligibly over the last $\sim$Gyr, since both
+share the identical present-day state).
+\item \textbf{Disruption time $T=5\text{--}9\Gyr$.} The footprint kinematics are
+essentially unchanged and the bound fraction drops only mildly with $T$: time is
+not the controlling parameter.
+\item \textbf{Halo mass $M_{200}=10^{8}\text{--}10^{11}\,\Msun$.} This is the
+decisive lever. Light haloes ($\sim10^{8}$) fully disrupt into a long, cold
+stream reaching the observed $\alpha\!\approx\!270^\circ$ with the best
+proper-motion match but zero bound core; heavy haloes ($\gtrsim10^{10}$) retain
+the cluster pair but give a compact, under-extended blob. No single mass both
+makes the stream and retains the clusters.
+\item \textbf{Orbit anchor.} The cluster-derived orbit lies a median $16^\circ$
+off the observed stream (on-sky directions differ by $53^\circ$); debris launched
+on it never develops the observed $\mu_\delta$ gradient. The Malhan stream-fit
+orbit follows the data to a median $0.7^\circ$; disrupting the same dwarf on it
+yields coverage $66\%$, $\alpha_{\max}\!\approx\!270^\circ$, and footprint
+$\mu_\delta=-2.37$ vs.\ observed $-2.34\,\mathrm{mas\,yr^{-1}}$. The mismatch was
+the launch orbit, not dynamical friction.
+\end{itemize}
+
+\end{document}

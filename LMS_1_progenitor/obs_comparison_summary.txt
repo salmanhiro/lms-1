@@ -1,0 +1,23 @@
+LMS-1 N-body final snapshot vs STREAMFINDER (Ibata+2024)
+================================================================
+observed members : 358   (with v_los: 29)
+footprint = convex hull of observed RA/Dec, dilated 15%
+model statistics use only debris INSIDE that footprint.
+
+OBSERVED  (median [16-84 pct]):
+  pmRA = +1.219 [-0.067, +2.767] mas/yr
+  pmDE = -2.343 [-3.922, -1.325] mas/yr
+  vlos = -69.3 [-145.8, -6.9] km/s
+
+MODEL [DF]  (N_in=1927, median [16-84 pct]):
+  pmRA = -0.120 [-0.373, +0.117] mas/yr   (Delta_med = -1.339)
+  pmDE = -0.097 [-0.372, +0.174] mas/yr   (Delta_med = +2.246)
+  vlos = -53.6 [-73.3, -34.1] km/s   (Delta_med = +15.8)
+  dist = 18.0 [16.9, 19.1] kpc
+
+MODEL [NODF]  (N_in=863, median [16-84 pct]):
+  pmRA = -0.135 [-0.387, +0.138] mas/yr   (Delta_med = -1.353)
+  pmDE = -0.165 [-0.414, +0.104] mas/yr   (Delta_med = +2.178)
+  vlos = -47.0 [-72.6, -18.5] km/s   (Delta_med = +22.3)
+  dist = 18.3 [17.3, 25.4] kpc
+

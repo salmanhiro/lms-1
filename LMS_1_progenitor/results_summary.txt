@@ -1,0 +1,10 @@
+LMS-1 progenitor rewind + disruption with two embedded GCs
+Dynamical friction added (absent in Yuan+2020 / Malhan+2021)
+============================================================
+
+[With DF]  bound stellar fraction = 0.392   core half-mass radius = 1.673 kpc
+    NGC 5024 : dist from LMS-1 centre = 0.048 kpc  ->  INSIDE core
+    NGC 5053 : dist from LMS-1 centre = 0.588 kpc  ->  INSIDE core
+[No DF]  bound stellar fraction = 0.148   core half-mass radius = 1.382 kpc
+    NGC 5024 : dist from LMS-1 centre = 0.074 kpc  ->  INSIDE core
+    NGC 5053 : dist from LMS-1 centre = 0.588 kpc  ->  INSIDE core
