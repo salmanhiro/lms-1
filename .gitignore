@@ -219,5 +219,5 @@ __marimo__/
 
 # Snapshots
 *.npy
-# Large data (exceeds GitHub 100 MB limit)
-data/RV_T_dr3_filtered.fits
+# Input data catalogues (kept locally, not in the repo)
+data/
